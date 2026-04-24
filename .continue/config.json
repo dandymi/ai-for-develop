@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "title": "fast",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-coder"
+    },
+    {
+      "title": "smart",
+      "provider": "openrouter",
+      "model": "anthropic/claude-3.5-sonnet"
+    }
+  ],
+  "customCommands": [
+    {
+      "name": "plan",
+      "prompt": "{file:.ai/prompts/planner.md}"
+    },
+    {
+      "name": "build",
+      "prompt": "{file:.ai/prompts/builder.md}"
+    },
+    {
+      "name": "review",
+      "prompt": "{file:.ai/prompts/reviewer.md}"
+    }
+  ]
+}

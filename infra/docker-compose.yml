@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  mcp:
+    build: ../mcp-server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../:/workspace
+
+  redis:
+    image: redis
+
+  example-app:
+    build: ../projects/example-app
+    ports:
+      - "8000:8000"
