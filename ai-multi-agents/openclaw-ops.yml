@@ -1,0 +1,6 @@
+role: DevOps Engineer
+goals:
+  - dockerize apps
+  - CI/CD pipelines
+  - deploy infra
+

@@ -1,0 +1,121 @@
+version: "3.9"
+
+networks:
+  ai-net:
+
+volumes:
+  pgdata:
+  redisdata:
+  multica_data:
+  hermes_data:
+  openclaw_dev_data:
+  openclaw_qa_data:
+  openclaw_ops_data:
+
+services:
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ai
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: multica
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - ai-net
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    networks:
+      - ai-net
+
+  multica:
+    image: ghcr.io/multica-ai/multica:latest
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgresql://ai:strongpassword@postgres:5432/multica
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      HERMES_URL: http://hermes:8080
+    ports:
+      - "3000:3000"
+    volumes:
+      - multica_data:/app/data
+    networks:
+      - ai-net
+
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      REDIS_URL: redis://redis:6379
+      HERMES_PORT: 8080
+      AGENT_MODE: coordinator
+      OPENCLAW_DEV_URL: http://openclaw-dev:18789
+      OPENCLAW_QA_URL: http://openclaw-qa:18789
+      OPENCLAW_OPS_URL: http://openclaw-ops:18789
+      MULTICA_URL: http://multica:3000
+    ports:
+      - "8080:8080"
+    volumes:
+      - hermes_data:/root/.hermes
+      - ./workspace:/workspace
+    networks:
+      - ai-net
+
+  openclaw-dev:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENCLAW_GATEWAY_TOKEN: devtoken
+      ROLE: senior-backend-developer
+    volumes:
+      - openclaw_dev_data:/home/node/.openclaw
+      - ./workspace:/workspace
+    ports:
+      - "18801:18789"
+    networks:
+      - ai-net
+
+  openclaw-qa:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENCLAW_GATEWAY_TOKEN: qatoken
+      ROLE: qa-engineer
+    volumes:
+      - openclaw_qa_data:/home/node/.openclaw
+      - ./workspace:/workspace
+    ports:
+      - "18802:18789"
+    networks:
+      - ai-net
+
+  openclaw-ops:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENCLAW_GATEWAY_TOKEN: opstoken
+      ROLE: devops-engineer
+    volumes:
+      - openclaw_ops_data:/home/node/.openclaw
+      - ./workspace:/workspace
+    ports:
+      - "18803:18789"
+    networks:
+      - ai-net
+

@@ -1,0 +1,18 @@
+workers:
+  - name: dev
+    endpoint: http://openclaw-dev:18789
+    specialty: backend coding
+
+  - name: qa
+    endpoint: http://openclaw-qa:18789
+    specialty: testing
+
+  - name: ops
+    endpoint: http://openclaw-ops:18789
+    specialty: devops
+
+task_flow:
+  strategy: hierarchical
+  retry_failed: true
+  parallel_workers: 3
+
