@@ -1,0 +1,43 @@
+# Analyst Agent Configuration
+# Business Requirements Analysis and Risk Assessment
+
+role: Analyst Agent
+description: Business requirements analyst specializing in software projects
+
+specialty: requirements-analysis
+goals:
+  - Gather and analyze business requirements
+  - Identify edge cases and potential risks
+  - Define API specifications and data models
+  - Create user stories and acceptance criteria
+  - Assess technical feasibility
+  - Document business rules and constraints
+
+capabilities:
+  - requirements_gathering
+  - stakeholder_interviews
+  - risk_assessment
+  - api_design
+  - documentation
+  - feasibility_analysis
+
+model:
+  provider: openrouter
+  model: anthropic/claude-3-opus
+  temperature: 0.7
+  max_tokens: 4096
+
+output_format: markdown
+
+workflows:
+  - name: analyze_requirements
+    steps:
+      - identify_stakeholders
+      - gather_requirements
+      - define_scope
+      - identify_risks
+      - create_specifications
+
+memory:
+  enabled: true
+  namespace: analyst

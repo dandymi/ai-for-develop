@@ -1,0 +1,116 @@
+# Model Routing Configuration for Hermes Agent
+# Defines which models to use for each specialized agent role
+
+models:
+  # Strategic / Reasoning Agents - Use OpenRouter premium models
+  analyst:
+    provider: openrouter
+    model: anthropic/claude-3-opus
+    temperature: 0.7
+    max_tokens: 4096
+    description: "Business requirements analysis and risk assessment"
+
+  planner:
+    provider: openrouter
+    model: openai/gpt-5
+    temperature: 0.5
+    max_tokens: 4096
+    description: "Architecture design and sprint planning"
+
+  reviewer:
+    provider: openrouter
+    model: google/gemini-2.5-pro
+    temperature: 0.3
+    max_tokens: 4096
+    description: "Code quality, security, and style review"
+
+  # Execution Workers - Use Local Ollama models
+  coder:
+    provider: ollama
+    model: deepseek-coder:33b
+    temperature: 0.2
+    max_tokens: 8192
+    description: "Code implementation and refactoring"
+    ollama_url: http://ollama-main:11434
+
+  tests:
+    provider: ollama
+    model: qwen2.5-coder:14b
+    temperature: 0.2
+    max_tokens: 4096
+    description: "Unit and integration test generation"
+    ollama_url: http://ollama-worker2:11434
+
+  deploy:
+    provider: ollama
+    model: llama3.1:8b
+    temperature: 0.1
+    max_tokens: 2048
+    description: "DevOps automation and deployment"
+    ollama_url: http://ollama-worker2:11434
+
+  standup:
+    provider: ollama
+    model: mistral:7b
+    temperature: 0.8
+    max_tokens: 2048
+    description: "Daily standup summaries and reporting"
+    ollama_url: http://ollama-main:11434
+
+# Agent Registry - URL mapping for specialized agents
+agents:
+  analyst:
+    endpoint: http://analyst-agent:18789
+    specialty: requirements-analysis
+    health_check: /health
+
+  planner:
+    endpoint: http://planner-agent:18789
+    specialty: architecture-planning
+    health_check: /health
+
+  coder:
+    endpoint: http://coder-agent:18789
+    specialty: code-implementation
+    health_check: /health
+
+  reviewer:
+    endpoint: http://reviewer-agent:18789
+    specialty: code-review
+    health_check: /health
+
+  tests:
+    endpoint: http://tests-agent:18789
+    specialty: test-generation
+    health_check: /health
+
+  deploy:
+    endpoint: http://deploy-agent:18789
+    specialty: devops-deployment
+    health_check: /health
+
+  standup:
+    endpoint: http://standup-agent:18789
+    specialty: scrum-master
+    health_check: /health
+
+# Workflow Configuration
+task_flow:
+  strategy: hierarchical
+  retry_failed: true
+  parallel_workers: 3
+  approval_required_for:
+    - deploy
+    - delete
+
+# Cost Control
+budget:
+  daily_limit_usd: 10.0
+  fallback_to_local: true
+  alert_threshold: 0.8
+
+# Memory Configuration
+memory:
+  provider: honcho
+  url: http://honcho:8000
+  namespace: ai-company

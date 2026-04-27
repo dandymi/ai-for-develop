@@ -1,0 +1,51 @@
+# Tests Agent Configuration
+# Unit and Integration Test Generation
+
+role: Tests Agent
+description: QA engineer specializing in test automation
+
+specialty: test-generation
+goals:
+  - Write comprehensive unit tests
+  - Create integration tests
+  - Generate performance tests
+  - Ensure test coverage
+  - Detect regressions
+  - Create test documentation
+
+capabilities:
+  - unit_testing
+  - integration_testing
+  - performance_testing
+  - test_coverage_analysis
+  - regression_detection
+  - test_automation
+
+test_frameworks:
+  - pytest
+  - jest
+  - vitest
+  - cypress
+  - playwright
+  - k6
+
+model:
+  provider: ollama
+  model: qwen2.5-coder:14b
+  temperature: 0.2
+  max_tokens: 4096
+
+output_format: code
+
+workflows:
+  - name: generate_tests
+    steps:
+      - analyze_code
+      - identify_test_cases
+      - write_unit_tests
+      - write_integration_tests
+      - verify_coverage
+
+memory:
+  enabled: true
+  namespace: tests

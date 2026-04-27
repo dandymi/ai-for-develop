@@ -1,0 +1,458 @@
+# =====================================================================
+# AI SOFTWARE COMPANY STACK - V2 PRODUCTION
+# Full docker-compose.yml with Traefik, Ollama, Honcho, and Specialized Agents
+# =====================================================================
+
+version: "3.9"
+
+name: ai-company-v2
+
+networks:
+  ai-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  grafana_data:
+  prometheus_data:
+  traefik_data:
+  honcho_data:
+  ollama1_data:
+  ollama2_data:
+  multica_data:
+  hermes_data:
+  workspace:
+
+# =====================================================================
+# SERVICES
+# =====================================================================
+
+services:
+
+# =====================================================================
+# REVERSE PROXY + SSL
+# =====================================================================
+
+  traefik:
+    image: traefik:v3.0
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --api.insecure=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=${TRAEFIK_EMAIL:-you@example.com}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_data:/letsencrypt
+    networks:
+      - ai-net
+
+# =====================================================================
+# DATABASES
+# =====================================================================
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strongpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-company}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ai} -d ${POSTGRES_DB:-company}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# =====================================================================
+# MEMORY PROVIDER
+# =====================================================================
+
+  honcho:
+    image: ghcr.io/plastic-labs/honcho:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-ai}:${POSTGRES_PASSWORD:-strongpassword}@postgres:5432/${POSTGRES_DB:-company}
+    volumes:
+      - honcho_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ai-net
+
+# =====================================================================
+# OLLAMA CLUSTER
+# =====================================================================
+
+  ollama-main:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama1_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    networks:
+      - ai-net
+
+  ollama-worker2:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama2_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    networks:
+      - ai-net
+
+# =====================================================================
+# PROJECT MANAGEMENT UI
+# =====================================================================
+
+  multica:
+    image: ghcr.io/multica-ai/multica:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ai}:${POSTGRES_PASSWORD:-strongpassword}@postgres:5432/${POSTGRES_DB:-company}
+      REDIS_URL: redis://redis:6379
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - multica_data:/app/data
+      - workspace:/workspace
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      hermes:
+        condition: service_started
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.multica.rule=Host(`multica.localhost`)
+      - traefik.http.routers.multica.entrypoints=web
+      - traefik.http.services.multica.loadbalancer.server.port=3000
+    networks:
+      - ai-net
+
+# =====================================================================
+# COORDINATOR
+# =====================================================================
+
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    restart: unless-stopped
+    environment:
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      REDIS_URL: redis://redis:6379
+      MEMORY_URL: http://honcho:8000
+      MODEL_COORDINATOR: openrouter/anthropic/claude-3.7-sonnet
+      MODEL_REVIEWER: openrouter/google/gemini-2.5-pro
+      OLLAMA_URL: http://ollama-main:11434
+      ANALYST_AGENT_URL: http://analyst-agent:18789
+      PLANNER_AGENT_URL: http://planner-agent:18789
+      CODER_AGENT_URL: http://coder-agent:18789
+      REVIEWER_AGENT_URL: http://reviewer-agent:18789
+      TESTS_AGENT_URL: http://tests-agent:18789
+      DEPLOY_AGENT_URL: http://deploy-agent:18789
+      STANDUP_AGENT_URL: http://standup-agent:18789
+    volumes:
+      - hermes_data:/root/.hermes
+      - workspace:/workspace
+      - ./configs/hermes:/config
+    depends_on:
+      redis:
+        condition: service_healthy
+      honcho:
+        condition: service_started
+      ollama-main:
+        condition: service_started
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.hermes.rule=Host(`agents.localhost`)
+      - traefik.http.routers.hermes.entrypoints=web
+      - traefik.http.services.hermes.loadbalancer.server.port=8080
+    networks:
+      - ai-net
+
+# =====================================================================
+# SPECIALIZED AGENTS - V2 Production
+# =====================================================================
+
+  analyst-agent:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: analyst
+      MODEL: openrouter/anthropic/claude-3-opus
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - workspace:/workspace
+      - ./configs/agents/analyst.yml:/app/config/agent.yml:ro
+    depends_on:
+      - honcho
+      - hermes
+    networks:
+      - ai-net
+
+  planner-agent:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: planner
+      MODEL: openrouter/openai/gpt-5
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - workspace:/workspace
+      - ./configs/agents/planner.yml:/app/config/agent.yml:ro
+    depends_on:
+      - honcho
+      - hermes
+    networks:
+      - ai-net
+
+  coder-agent:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: coder
+      MODEL: ollama/deepseek-coder:33b
+      OLLAMA_URL: http://ollama-main:11434
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - workspace:/workspace
+      - ./configs/agents/coder.yml:/app/config/agent.yml:ro
+    depends_on:
+      - honcho
+      - hermes
+      - ollama-main
+    networks:
+      - ai-net
+
+  reviewer-agent:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: reviewer
+      MODEL: openrouter/google/gemini-2.5-pro
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - workspace:/workspace
+      - ./configs/agents/reviewer.yml:/app/config/agent.yml:ro
+    depends_on:
+      - honcho
+      - hermes
+    networks:
+      - ai-net
+
+  tests-agent:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: tester
+      MODEL: ollama/qwen2.5-coder:14b
+      OLLAMA_URL: http://ollama-worker2:11434
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - workspace:/workspace
+      - ./configs/agents/tests.yml:/app/config/agent.yml:ro
+    depends_on:
+      - honcho
+      - hermes
+      - ollama-worker2
+    networks:
+      - ai-net
+
+  deploy-agent:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: devops
+      MODEL: ollama/llama3.1:8b
+      OLLAMA_URL: http://ollama-worker2:11434
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - workspace:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./configs/agents/deploy.yml:/app/config/agent.yml:ro
+    depends_on:
+      - honcho
+      - hermes
+      - ollama-worker2
+    networks:
+      - ai-net
+
+  standup-agent:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: scrum-master
+      MODEL: ollama/mistral:7b
+      OLLAMA_URL: http://ollama-main:11434
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+      SCHEDULE: "0 9 * * *"
+    volumes:
+      - workspace:/workspace
+      - ./configs/agents/standup.yml:/app/config/agent.yml:ro
+    depends_on:
+      - honcho
+      - hermes
+      - ollama-main
+    networks:
+      - ai-net
+
+# =====================================================================
+# MONITORING
+# =====================================================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - ai-net
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.rule=Host(`grafana.localhost`)
+      - traefik.http.routers.grafana.entrypoints=web
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+    networks:
+      - ai-net
+
+# =====================================================================
+# LEGACY AGENTS (V1 Compatibility)
+# =====================================================================
+
+  openclaw-dev:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: senior-backend-developer
+      MODEL: ollama/deepseek-coder:33b
+      OLLAMA_URL: http://ollama-main:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENCLAW_GATEWAY_TOKEN: devtoken
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - openclaw_dev_data:/home/node/.openclaw
+      - workspace:/workspace
+      - ./openclaw-dev.yml:/app/config/agent.yml:ro
+    ports:
+      - "18801:18789"
+    depends_on:
+      - ollama-main
+      - hermes
+    networks:
+      - ai-net
+
+  openclaw-qa:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: qa-engineer
+      MODEL: ollama/qwen2.5-coder:14b
+      OLLAMA_URL: http://ollama-worker2:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENCLAW_GATEWAY_TOKEN: qatoken
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - openclaw_qa_data:/home/node/.openclaw
+      - workspace:/workspace
+      - ./openclaw-qa.yml:/app/config/agent.yml:ro
+    ports:
+      - "18802:18789"
+    depends_on:
+      - ollama-worker2
+      - hermes
+    networks:
+      - ai-net
+
+  openclaw-ops:
+    image: openclaw:latest
+    restart: unless-stopped
+    environment:
+      ROLE: devops-engineer
+      MODEL: ollama/llama3.1:8b
+      OLLAMA_URL: http://ollama-worker2:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENCLAW_GATEWAY_TOKEN: opstoken
+      MEMORY_URL: http://honcho:8000
+      HERMES_URL: http://hermes:8080
+    volumes:
+      - openclaw_ops_data:/home/node/.openclaw
+      - workspace:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./openclaw-ops.yml:/app/config/agent.yml:ro
+    ports:
+      - "18803:18789"
+    depends_on:
+      - ollama-worker2
+      - hermes
+    networks:
+      - ai-net

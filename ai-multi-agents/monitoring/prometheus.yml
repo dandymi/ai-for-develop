@@ -1,0 +1,92 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Docker daemon metrics (requires enabling Docker metrics)
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+
+  # Node exporter (if available)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Agent services
+  - job_name: 'hermes-agent'
+    static_configs:
+      - targets: ['hermes:8080']
+    metrics_path: /metrics
+
+  - job_name: 'multica'
+    static_configs:
+      - targets: ['multica:3000']
+    metrics_path: /metrics
+
+  - job_name: 'honcho-memory'
+    static_configs:
+      - targets: ['honcho:8000']
+    metrics_path: /metrics
+
+  # OpenClaw Agents
+  - job_name: 'analyst-agent'
+    static_configs:
+      - targets: ['analyst-agent:18789']
+    metrics_path: /metrics
+
+  - job_name: 'planner-agent'
+    static_configs:
+      - targets: ['planner-agent:18789']
+    metrics_path: /metrics
+
+  - job_name: 'coder-agent'
+    static_configs:
+      - targets: ['coder-agent:18789']
+    metrics_path: /metrics
+
+  - job_name: 'reviewer-agent'
+    static_configs:
+      - targets: ['reviewer-agent:18789']
+    metrics_path: /metrics
+
+  - job_name: 'tests-agent'
+    static_configs:
+      - targets: ['tests-agent:18789']
+    metrics_path: /metrics
+
+  - job_name: 'deploy-agent'
+    static_configs:
+      - targets: ['deploy-agent:18789']
+    metrics_path: /metrics
+
+  - job_name: 'standup-agent'
+    static_configs:
+      - targets: ['standup-agent:18789']
+    metrics_path: /metrics
+
+  # Legacy agents (V1)
+  - job_name: 'openclaw-dev'
+    static_configs:
+      - targets: ['openclaw-dev:18789']
+    metrics_path: /metrics
+
+  - job_name: 'openclaw-qa'
+    static_configs:
+      - targets: ['openclaw-qa:18789']
+    metrics_path: /metrics
+
+  - job_name: 'openclaw-ops'
+    static_configs:
+      - targets: ['openclaw-ops:18789']
+    metrics_path: /metrics

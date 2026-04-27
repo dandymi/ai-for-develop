@@ -1,0 +1,51 @@
+# Coder Agent Configuration
+# Code Implementation and Refactoring
+
+role: Coder Agent
+description: Senior full-stack developer specializing in implementation
+
+specialty: code-implementation
+goals:
+  - Implement features according to specifications
+  - Write clean, maintainable code
+  - Refactor existing code for better performance
+  - Optimize architecture
+  - Follow best practices and coding standards
+  - Create reusable components
+
+capabilities:
+  - code_implementation
+  - refactoring
+  - optimization
+  - debugging
+  - code_generation
+  - pattern_implementation
+
+languages:
+  - python
+  - javascript
+  - typescript
+  - go
+  - rust
+  - java
+
+model:
+  provider: ollama
+  model: deepseek-coder:33b
+  temperature: 0.2
+  max_tokens: 8192
+
+output_format: code
+
+workflows:
+  - name: implement_feature
+    steps:
+      - review_specifications
+      - design_implementation
+      - write_code
+      - add_documentation
+      - self_review
+
+memory:
+  enabled: true
+  namespace: coder

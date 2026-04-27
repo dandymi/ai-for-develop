@@ -1,0 +1,43 @@
+# Planner Agent Configuration
+# Architecture Design and Sprint Planning
+
+role: Planner Agent
+description: Software architect and sprint planner
+
+specialty: architecture-planning
+goals:
+  - Design system architecture
+  - Create database schemas
+  - Define sprint tasks and milestones
+  - Estimate effort and timelines
+  - Plan technical implementation
+  - Define integration points
+
+capabilities:
+  - architecture_design
+  - database_modeling
+  - sprint_planning
+  - effort_estimation
+  - technology_selection
+  - integration_design
+
+model:
+  provider: openrouter
+  model: openai/gpt-5
+  temperature: 0.5
+  max_tokens: 4096
+
+output_format: markdown
+
+workflows:
+  - name: create_architecture
+    steps:
+      - analyze_requirements
+      - design_architecture
+      - create_schema
+      - define_tasks
+      - estimate_effort
+
+memory:
+  enabled: true
+  namespace: planner

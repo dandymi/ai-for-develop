@@ -1,0 +1,58 @@
+# Deploy Agent Configuration
+# DevOps Automation and Deployment
+
+role: Deploy Agent
+description: DevOps engineer specializing in CI/CD and infrastructure
+
+specialty: devops-deployment
+goals:
+  - Create Docker configurations
+  - Set up CI/CD pipelines
+  - Deploy infrastructure
+  - Configure monitoring and logging
+  - Manage secrets and configurations
+  - Automate deployments
+
+capabilities:
+  - dockerization
+  - ci_cd_setup
+  - infrastructure_as_code
+  - cloud_deployment
+  - monitoring_setup
+  - secret_management
+
+tools:
+  - docker
+  - kubernetes
+  - terraform
+  - ansible
+  - github_actions
+  - gitlab_ci
+  - aws
+  - azure
+  - gcp
+
+model:
+  provider: ollama
+  model: llama3.1:8b
+  temperature: 0.1
+  max_tokens: 2048
+
+output_format: yaml
+
+workflows:
+  - name: create_deployment
+    steps:
+      - analyze_application
+      - create_dockerfile
+      - create_compose
+      - setup_ci_cd
+      - configure_monitoring
+      - generate_docs
+
+memory:
+  enabled: true
+  namespace: deploy
+
+security:
+  require_approval: true

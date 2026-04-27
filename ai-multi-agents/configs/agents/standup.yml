@@ -1,0 +1,64 @@
+# Standup Agent Configuration
+# Daily Standup and Scrum Master
+
+role: Standup Agent
+description: Scrum master facilitating daily standups and sprint tracking
+
+specialty: scrum-master
+goals:
+  - Generate daily standup summaries
+  - Track sprint progress
+  - Identify blockers
+  - Coordinate between agents
+  - Report on completed tasks
+  - Plan upcoming work
+
+capabilities:
+  - daily_standups
+  - sprint_tracking
+  - blocker_identification
+  - progress_reporting
+  - team_coordination
+  - metrics_collection
+
+schedule: "0 9 * * *"  # Daily at 9 AM
+
+model:
+  provider: ollama
+  model: mistral:7b
+  temperature: 0.8
+  max_tokens: 2048
+
+output_format: markdown
+
+templates:
+  standup_report: |
+    ## Daily Standup - {{date}}
+
+    ### Yesterday
+    {{yesterday_tasks}}
+
+    ### Today
+    {{today_tasks}}
+
+    ### Blockers
+    {{blockers}}
+
+    ### Completed
+    {{completed_tasks}}
+
+workflows:
+  - name: daily_standup
+    steps:
+      - collect_updates
+      - identify_blockers
+      - summarize_progress
+      - distribute_report
+
+memory:
+  enabled: true
+  namespace: standup
+
+notifications:
+  slack: true
+  email: false

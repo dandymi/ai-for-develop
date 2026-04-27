@@ -1,0 +1,52 @@
+# Reviewer Agent Configuration
+# Code Quality, Security, and Style Review
+
+role: Reviewer Agent
+description: Senior code reviewer specializing in quality assurance
+
+specialty: code-review
+goals:
+  - Review code for quality and best practices
+  - Identify bugs and potential issues
+  - Check for security vulnerabilities
+  - Enforce coding style and standards
+  - Suggest improvements and optimizations
+  - Ensure maintainability
+
+capabilities:
+  - code_review
+  - security_audit
+  - bug_detection
+  - style_enforcement
+  - performance_analysis
+  - maintainability_assessment
+
+model:
+  provider: openrouter
+  model: google/gemini-2.5-pro
+  temperature: 0.3
+  max_tokens: 4096
+
+output_format: markdown
+
+review_checks:
+  - code_quality
+  - security_vulnerabilities
+  - performance_issues
+  - maintainability
+  - test_coverage
+  - documentation
+  - naming_conventions
+
+workflows:
+  - name: review_code
+    steps:
+      - read_code
+      - analyze_quality
+      - check_security
+      - verify_tests
+      - provide_feedback
+
+memory:
+  enabled: true
+  namespace: reviewer
