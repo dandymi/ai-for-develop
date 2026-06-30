@@ -1,0 +1,32 @@
+# Ignore cache and temporary files
+profiles/**/cache/
+profiles/**/.cache/
+profiles/**/.hub/
+profiles/**/image_cache/
+profiles/**/audio_cache/
+profiles/**/home/
+profiles/**/logs/
+profiles/**/bin/
+profiles/**/lsp/
+profiles/**/sessions/
+profiles/**/state/
+profiles/**/workspace/
+profiles/**/hooks/
+
+# Ignore database files
+profiles/**/*.db
+profiles/**/*.db-shm
+profiles/**/*.db-wal
+
+# Ignore auth and runtime files
+profiles/**/auth.*
+profiles/**/auth.json
+profiles/**/.skills_prompt_snapshot.json
+profiles/**/models_dev_cache.json
+profiles/**/provider_models_cache.json
+profiles/**/ollama_cloud_models_cache.json
+profiles/**/*.lock
+
+# Ignore runtime state files
+profiles/**/ticker_*
+profiles/**/state.*

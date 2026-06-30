@@ -1,0 +1,20 @@
+abliteration:
+  method: informed
+  n_directions: null
+  norm_preserve: true
+  refinement_passes: 1
+  regularization: 0.0
+model:
+  device: auto
+  dtype: bfloat16
+  name: meta-llama/Llama-3.1-8B-Instruct
+  quantization: null
+output:
+  contribute: false
+  directory: ./abliterated-models
+  save_metadata: true
+verify:
+  compute_kl: true
+  compute_perplexity: true
+  enabled: true
+  test_prompts: null

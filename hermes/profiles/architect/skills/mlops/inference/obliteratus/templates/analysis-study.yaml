@@ -1,0 +1,19 @@
+analysis:
+- alignment_imprint
+- concept_geometry
+- logit_lens
+- anti_ouroboros
+- cross_layer
+- causal_tracing
+- residual_stream
+model:
+  device: auto
+  dtype: bfloat16
+  name: meta-llama/Llama-3.1-8B-Instruct
+  quantization: 4bit
+output:
+  directory: ./analysis-results
+  save_plots: true
+  save_report: true
+study:
+  preset: jailbreak

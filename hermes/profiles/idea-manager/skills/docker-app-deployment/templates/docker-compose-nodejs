@@ -1,0 +1,16 @@
+services:
+  app-name:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount database files read-only
+      - ~/.hermes/weather/weather.db:/app/weather.db:ro
+      # Mount scripts that the app might call
+      - ~/.hermes/weather/fetch_multi_source.py:/app/fetch_multi_source.py:ro
+    environment:
+      # Override configurable paths in the app
+      - PORT=3000
+      - DB_PATH=/app/weather.db
+      - FETCH_SCRIPT=/app/fetch_multi_source.py

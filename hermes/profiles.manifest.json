@@ -1,0 +1,52 @@
+{
+  "description": "Hermes profile configurations for sharing via GitHub",
+  "version": "1.0",
+  "profiles": {
+    "deployer": {
+      "model": "anthropic/claude-3.5-sonnet",
+      "provider": "openrouter"
+    },
+    "code-developer": {
+      "model": "anthropic/claude-3.7-sonnet",
+      "provider": "openrouter"
+    },
+    "security-checker": {
+      "model": "anthropic/claude-sonnet-4",
+      "provider": "openrouter"
+    },
+    "idea-manager": {
+      "model": "poolside/laguna-m.1:free",
+      "provider": "openrouter"
+    },
+    "app-tester": {
+      "model": "openai/o4-mini",
+      "provider": "openrouter"
+    },
+    "code-documenter": {
+      "model": "nvidia/nemotron-3-ultra:free",
+      "provider": "nous"
+    },
+    "impl-engineer": {
+      "model": "moonshotai/kimi-k2.6",
+      "provider": "openrouter"
+    },
+    "specs-analyst": {
+      "model": "claude-sonnet-4.6",
+      "provider": "copilot"
+    },
+    "architect": {
+      "model": "moonshotai/kimi-k2.6",
+      "provider": "openrouter"
+    },
+    "code-reviewer": {
+      "model": "anthropic/claude-sonnet-4",
+      "provider": "openrouter"
+    }
+  },
+  "notes": [
+    "API keys and auth tokens have been redacted",
+    "Large cache files excluded for repository size",
+    "Database files excluded (.db files)",
+    "Use hermes profile import to restore on another installation"
+  ]
+}

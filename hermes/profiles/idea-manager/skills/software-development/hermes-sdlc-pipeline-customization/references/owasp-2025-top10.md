@@ -1,0 +1,11 @@
+### OWASP Top 10 — 2025 Reference
+- **A01**: Broken Access Control → RBAC every endpoint, ownership checks
+- **A02**: Security Misconfiguration → Security headers, no debug in prod, no defaults
+- **A03**: Software Supply Chain Failures → `npm audit`, SBOM, SLSA provenance
+- **A04**: Cryptographic Failures → Argon2id/bcrypt, TLS everywhere, no secrets in code
+- **A05**: Injection → Parameterized queries, input validation, no raw SQL
+- **A06**: Insecure Design → Threat modeling, secure design patterns
+- **A07**: Authentication Failures → Rate-limit login, secure sessions, MFA
+- **A08**: Software/Data Integrity Failures → SRI, signed artifacts, no deserialization
+- **A09**: Security Logging & Monitoring Failures → Log events, no PII, active alerting
+- **A10**: Exceptional Conditions → Handle all errors, no stack traces in prod
